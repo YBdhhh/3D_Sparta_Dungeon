@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
@@ -10,12 +9,23 @@ public class PlayerController : MonoBehaviour
     private Vector2 curMovementInput;
     public float jumpPower;
 
+    [Header("Camera")]
+    public float camXRotate;
+    public Vector2 mousedelta;
+    public float cameraSensitivity;
+    public Transform cameraContainer;
+    public float minXRotate;
+    public float maxXRotate;
+
     private Rigidbody rb;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+    }
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     // Update is called once per frame
@@ -23,6 +33,12 @@ public class PlayerController : MonoBehaviour
     {
         Move();
     }
+
+    private void LateUpdate()
+    {
+        CameraLook();
+    }
+
 
     public void OnMoveInput(InputAction.CallbackContext context)
     {
@@ -43,6 +59,20 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
         }
     }
+
+    public void OnLookInput(InputAction.CallbackContext context)
+    {
+        mousedelta = context.ReadValue<Vector2>();
+    }
+
+    private void CameraLook()
+    {
+        camXRotate += mousedelta.y * cameraSensitivity;
+        camXRotate = Mathf.Clamp(camXRotate, minXRotate, maxXRotate);   //위아래 화면 뒤집힘 방지
+        cameraContainer.localEulerAngles = new Vector3(-camXRotate, 0, 0);
+        transform.eulerAngles += new Vector3(0, mousedelta.x * cameraSensitivity, 0);
+    }
+
 
     bool IsGrounded()
     {
